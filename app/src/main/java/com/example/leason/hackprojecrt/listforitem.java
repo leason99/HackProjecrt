@@ -3,6 +3,7 @@ package com.example.leason.hackprojecrt;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
 public class listforitem extends AppCompatActivity {
 
     private Handler mHandler;
@@ -115,8 +117,11 @@ public class listforitem extends AppCompatActivity {
 
     String getString(final String Uri) {
         final String[] getdata = new String[1];
-        new Thread(new Runnable() {
-            public void run() {
+        new AsyncTask<String, Integer, String>() {
+
+            @Override
+            protected String doInBackground(String... params) {
+
                 final String[] getdata = new String[1];
                 System.out.println("here");
                 HttpURLConnection conn = null;
@@ -138,8 +143,9 @@ public class listforitem extends AppCompatActivity {
                 Message msg = new Message();
                 msg.what = 1;
                 mHandler.sendMessage(msg);
+                return getdata[0];
             }
-        }).start();
+        }.execute(Uri);
         return getdata[0];
     }
 
@@ -149,7 +155,7 @@ public class listforitem extends AppCompatActivity {
         public MyAdapter(Context c) {
             myInflater = LayoutInflater.from(c);
         }
-
+        ViewHolder viewHolder; // view lookup cache stored in tag
         @Override
         public int getCount() {
             return id.length;
@@ -167,30 +173,51 @@ public class listforitem extends AppCompatActivity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            convertView = myInflater.inflate(R.layout.itemlist, null);
+           // convertView = myInflater.inflate(R.layout.itemlist, null);
 
-            // 取得 mylayout.xml 中的元件
-            ImageView imgLogo = (ImageView) convertView.findViewById(R.id.imgLogo);
-            TextView txtName = ((TextView) convertView.findViewById(R.id.txtName));
-            TextView txtengName = ((TextView) convertView.findViewById(R.id.txtengName));
-            TextView use = ((TextView) convertView.findViewById(R.id.usign));
-            // 設定元件內容
-            switch (size[position]) {
-                case "大":
-                    imgLogo.setImageResource(icon[0]);
-                    break;
-                case "中":
-                    imgLogo.setImageResource(icon[1]);
-                    break;
-                case "小":
-                    imgLogo.setImageResource(icon[2]);
-                    break;
+
+            if (convertView == null) {
+                viewHolder = new ViewHolder();
+              //  LayoutInflater inflater = LayoutInflater.from();
+                convertView = myInflater.inflate(R.layout.itemlist, parent, false);
+                viewHolder.icon = (ImageView) convertView.findViewById(R.id.imgLogo);
+                switch (size[position]) {
+                    case "大":
+                        viewHolder.icon.setImageResource(icon[0]);
+                        break;
+                    case "中":
+                        viewHolder.icon.setImageResource(icon[1]);
+                        break;
+                    case "小":
+                        viewHolder.icon.setImageResource(icon[2]);
+                        break;
+                }
+                TextView txtName = ((TextView) convertView.findViewById(R.id.txtName));
+                TextView txtengName = ((TextView) convertView.findViewById(R.id.txtengName));
+                TextView use = ((TextView) convertView.findViewById(R.id.usign));
+                // 設定元件內容
+
+//            imgLogo.setImageResource(icon[2]);
+                txtName.setText(location[position]);
+                //或 txtName.setText(""+getItem(position));
+                txtengName.setText("size :  " + size[position]);
+                use.setText("總共:  " + total[position] + "   已使用:" + using[position]);
+                convertView.setTag(viewHolder);
+
+            } else {
+                viewHolder = (ViewHolder) convertView.getTag();
             }
-            txtName.setText(location[position]);
-            //或 txtName.setText(""+getItem(position));
-            txtengName.setText("size :  " + size[position]);
-            use.setText("總共:  " + total[position] + "   已使用:" + using[position]);
+
+        // 取得 mylayout.xml 中的元件
+    //    ImageView imgLogo = (ImageView) convertView.findViewById(R.id.imgLogo);
+
             return convertView;
         }
     }
+
+    private static class ViewHolder {
+        ImageView icon;
+
+    }
+
 }

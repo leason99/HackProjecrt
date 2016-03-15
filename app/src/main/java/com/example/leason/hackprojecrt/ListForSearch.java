@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
@@ -15,16 +15,11 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.common.api.GoogleApiClient;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,8 +29,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.util.List;
 import java.util.Locale;
@@ -125,6 +118,40 @@ public class ListForSearch extends AppCompatActivity {
 
     String getString(final String Uri) {
         final String[] getdata = new String[1];
+        new AsyncTask<String, Integer, String>() {
+
+            @Override
+            protected String doInBackground(String... params) {
+
+                final String[] getdata = new String[1];
+                HttpURLConnection conn = null;
+                URL url = null;
+                try {
+                    url = new URL(Uri);
+                    conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setReadTimeout(10000);
+                    conn.setConnectTimeout(15000);
+                    conn.connect();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    getdata[0] = reader.readLine();
+                    reader.close();
+                    getData = getdata[0];
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                Message msg = new Message();
+                msg.what = 1;
+                mHandler.sendMessage(msg);
+                return getdata[0];
+
+            }
+        }.execute(Uri);
+
+
+
+        /*
         new Thread(new Runnable() {
             public void run() {
                 final String[] getdata = new String[1];
@@ -149,7 +176,8 @@ public class ListForSearch extends AppCompatActivity {
                 msg.what = 1;
                 mHandler.sendMessage(msg);
             }
-        }).start();
+        }).start();*/
+       // return getdata[0];
         return getdata[0];
     }
 
